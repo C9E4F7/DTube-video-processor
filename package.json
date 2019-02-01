@@ -1,0 +1,24 @@
+{
+  "name": "dtube-uploader",
+  "version": "1.0.0",
+  "description": "receives, encodes, uploads videos to ipfs for dtube",
+  "main": "video-processor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node video-processor.js"
+  },
+  "keywords": [
+    "dtube",
+    "uploader",
+    "encoder"
+  ],
+  "author": "C9E4F7",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "formidable": "^1.2.1",
+    "handbrake-js": "^3.0.8",
+    "ipfs-http-client": "^29.1.0",
+    "shelljs": "^0.8.3",
+    "uuid": "^3.3.2"
+  }
+}
