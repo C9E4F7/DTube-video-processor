@@ -1,5 +1,5 @@
 {
-  "name": "dtube-uploader",
+  "name": "dtube-video-processor",
   "version": "1.0.0",
   "description": "receives, encodes, uploads videos to ipfs for dtube",
   "main": "video-processor.js",
