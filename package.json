@@ -4,7 +4,7 @@
   "description": "receives, encodes, uploads videos to ipfs for dtube",
   "main": "video-processor.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Error: no test specified\"",
     "start": "node video-processor.js"
   },
   "keywords": [
