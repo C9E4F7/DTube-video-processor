@@ -9,6 +9,3 @@ buildJob:
     script:
     - npm test
     
-buildJob:
-    script:
-    - docker build -t nannal/dtube-encoder
