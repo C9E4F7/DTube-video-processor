@@ -7,7 +7,9 @@ This tool accepts videos across HTTP then encodes the videos and addms them to a
 ## Installation
 
 The tool can be run standalone using 
+
     npm install; npm start
     
 Or by using the docker container
-   docker build . 
+
+    docker build . 
