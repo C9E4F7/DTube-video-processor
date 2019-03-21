@@ -1,0 +1,11 @@
+before_script:
+    - apt-get update -y
+    - apt-get install  ffmpeg imagemagick  libjansson4  -y
+    -  wget http://ppa.launchpad.net/stebbins/handbrake-releases/ubuntu/pool/main/h/handbrake/handbrake-cli_1.1.2-zhb-1ppa1~xenial1_amd64.deb
+    - dpkg -i ./handbrake-cli_1.1.2-zhb-1ppa1~xenial1_amd64.deb
+    - npm install
+
+buildJob:
+    script:
+    - npm test
+    
