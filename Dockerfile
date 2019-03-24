@@ -1,6 +1,5 @@
 FROM node:latest
-LABEL "project.home"="https://github.com/nannal/"
-#RUN git clone git://github.com/nannal/dtube-encoder
+LABEL "project.home"="https://gitlab.nannal.com/dtube/dtube-video-processor/"
 
 RUN apt-get update -y
 RUN apt-get install  ffmpeg imagemagick  libjansson4  -y
