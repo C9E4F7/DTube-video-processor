@@ -30,18 +30,18 @@ var cmds = {
 
       ipfs.add(testBuffer, function (err, file) {
 
-          if (err) {
-              console.log(err);
-              process.exit();
-            }
-              // updating relevant encoder response fields
-              cmds.setObjPropToValue(cmds.encoderResponse, prop+".progress", "100.00%");
-              cmds.setObjPropToValue(cmds.encoderResponse, prop+".lastTimeProgress", Date());
-              cmds.setObjPropToValue(cmds.encoderResponse, prop+".step", "success");
-              cmds.setObjPropToValue(cmds.encoderResponse, prop+".hash", file[0].hash);
-              cmds.setObjPropToValue(cmds.encoderResponse, prop+".fileSize", file[0].size);
+        if (err) {
+          console.log(err);
+          process.exit();
+        }
+        // updating relevant encoder response fields
+        cmds.setObjPropToValue(cmds.encoderResponse, prop+".progress", "100.00%");
+        cmds.setObjPropToValue(cmds.encoderResponse, prop+".lastTimeProgress", Date());
+        cmds.setObjPropToValue(cmds.encoderResponse, prop+".step", "success");
+        cmds.setObjPropToValue(cmds.encoderResponse, prop+".hash", file[0].hash);
+        cmds.setObjPropToValue(cmds.encoderResponse, prop+".fileSize", file[0].size);
 
-          });
+      });
 
     }
   },
@@ -56,101 +56,98 @@ var cmds = {
     // splits video into images
     createVideoSplitCmd: (filePath, vidLength, resDir) => {
 
-              if (vidLength > 600) {
-                 var frameRate = 100/vidLength;
-              } else {
-                var frameRate = 1;
-              }
+      if (vidLength > 600) {
+        var frameRate = 100/vidLength;
+      } else {
+        var frameRate = 1;
+      }
 
-              return `ffmpeg -y -i `+filePath+ ` -r `+frameRate+` -vf scale=128:72 -f image2 `+resDir+`/img%03d`
+      return `ffmpeg -y -i `+filePath+ ` -r `+frameRate+` -vf scale=128:72 -f image2 `+resDir+`/img%03d`
     },
 
     // concatenates all the images together
     createMontageCmd: (resDir) => {
-              return `montage -mode concatenate -tile 1x `+resDir+`/* `+resDir+`/sprite.png`
+      return `montage -mode concatenate -tile 1x `+resDir+`/* `+resDir+`/sprite.png`
     },
 
     createSprite: (splitCmd, montCmd) => {
 
-        shell.exec(splitCmd, function(code, stdout, stderr) {
+      shell.exec(splitCmd, function(code, stdout, stderr) {
 
-                          // code isn't 0 if error occurs
-                          if (code) {
-                           console.log(stderr);
-                           process.exit();
-                         } else {
-                           shell.exec(montCmd, function(code, stdout, stderr){
-                                    // code isn't 0 if error occurs
-                                    if (code) {
-                                     console.log(stderr);
-                                     process.exit();
-                                   } else {
-                                     //if no errors, update relevant encoder response fields and upload to ipfs
-                                     cmds.encoderResponse.sprite.spriteCreation.progress = "100.00%";
-                    								 cmds.encoderResponse.sprite.spriteCreation.lastTimeProgress = Date();
-                    								 cmds.encoderResponse.sprite.spriteCreation.step = "Success";
-                                     cmds.ipfs_cmds.ipfsUpload("./sprite/sprite.png", 'sprite.ipfsAddSprite');
-                                     return stdout;
-                                   }
-                            });
-                         }
+        // code isn't 0 if error occurs
+        if (code) {
+          console.log(stderr);
+          process.exit();
+        } else {
+          shell.exec(montCmd, function(code, stdout, stderr){
+            // code isn't 0 if error occurs
+            if (code) {
+              console.log(stderr);
+              process.exit();
+            } else {
+              //if no errors, update relevant encoder response fields and upload to ipfs
+              cmds.encoderResponse.sprite.spriteCreation.progress = "100.00%";
+    					cmds.encoderResponse.sprite.spriteCreation.lastTimeProgress = Date();
+    					cmds.encoderResponse.sprite.spriteCreation.step = "Success";
+              cmds.ipfs_cmds.ipfsUpload("./sprite/sprite.png", 'sprite.ipfsAddSprite');
+              return stdout;
+            }
+          });
+        }
 
-       });
+      });
     }
 
   },
   encoder_cmds: {
 
     encoderSettings: {
-           input: '',
-           output: '',
-           maxWidth: 0,
-           maxHeight: 0,
-           optimize: true,
-           format: "av_mp4",
-           encoder: "x264",
-           rate: "30"
-     },
+      input: '',
+      output: '',
+      maxWidth: 0,
+      maxHeight: 0,
+      optimize: true,
+      format: "av_mp4",
+      encoder: "x264",
+      rate: "30"
+    },
 
-     changeSettings: (filePath, resName, maxWidth, maxHeight) => {
+    changeSettings: (filePath, resName, maxWidth, maxHeight) => {
+      let settings = cmds.encoder_cmds.encoderSettings;
+      settings.input = filePath;
+      settings.output = resName;
+      settings.maxWidth = maxWidth;
+      settings.maxHeight = maxHeight;
 
-       let settings = cmds.encoder_cmds.encoderSettings;
-       settings.input = filePath;
-       settings.output = resName;
-       settings.maxWidth = maxWidth;
-       settings.maxHeight = maxHeight;
+      return settings
 
-       return settings
+    },
 
-     },
+    encode: (settings, encodedVideoIndex, cb) => {
+      var noop = function(){};
+      cb = cb || noop;
 
-     encode: (settings, encodedVideoIndex, cb) => {
+      let propIpfs = 'encodedVideos[' + String(encodedVideoIndex) + '].ipfsAddEncodeVideo';
+      var outputName = settings.output;
 
-       var noop = function(){};
-       cb = cb || noop;
-
-       let propIpfs = 'encodedVideos[' + String(encodedVideoIndex) + '].ipfsAddEncodeVideo';
-       var outputName = settings.output;
-
-       hbjs.spawn(settings)
-         .on('error', err => {
-           console.log(err);
-           cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.errorMessage = err;
-           process.exit();
-         })
-         .on('progress', progress => {
-           cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.progress = String(progress.percentComplete)+"%";
-           cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.lastTimeProgress = Date();
-         }).on('complete', () => {
-
-           // when complete, upload to ipfs
-           cmds.ipfs_cmds.ipfsUpload(outputName, propIpfs);
-           cb();
-         });
-     }
+      hbjs.spawn(settings)
+        .on('error', err => {
+          console.log(err);
+          cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.errorMessage = err;
+          process.exit();
+        })
+        .on('progress', progress => {
+          cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.progress = String(progress.percentComplete)+"%";
+          cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.lastTimeProgress = Date();
+        })
+        .on('complete', () => {
+          // when complete, upload to ipfs
+          cmds.ipfs_cmds.ipfsUpload(outputName, propIpfs);
+          cb();
+        });
+    }
   },
   encoderResponse: {
-
     finished: false,
     debugInfo: null,
     sourceAudioCpuEncoding: null,
@@ -194,15 +191,15 @@ var cmds = {
     var num = encodeSize.length;
 
     for (let i = 0; i < num; i++) {
-        cmds.encoderResponse.encodedVideos.push({
-          encode: {
-            progress: "Waiting in queue...",
-            encodeSize: "",
-            lastTimeProgress: null,
-            errorMessage: null,
-            step: "Waiting",
-            positionInQueue: null
-          },
+      cmds.encoderResponse.encodedVideos.push({
+        encode: {
+          progress: "Waiting in queue...",
+          encodeSize: "",
+          lastTimeProgress: null,
+          errorMessage: null,
+          step: "Waiting",
+          positionInQueue: null
+        },
           ipfsAddEncodeVideo: {
             progress: null,
             encodeSize: "",
@@ -213,9 +210,9 @@ var cmds = {
             hash: null,
             fileSize: null
           }
-        });
-        cmds.encoderResponse.encodedVideos[i].encode.encodeSize = encodeSize[i];
-        cmds.encoderResponse.encodedVideos[i].ipfsAddEncodeVideo.encodeSize = encodeSize[i];
+      });
+      cmds.encoderResponse.encodedVideos[i].encode.encodeSize = encodeSize[i];
+      cmds.encoderResponse.encodedVideos[i].ipfsAddEncodeVideo.encodeSize = encodeSize[i];
     }
 
   },
@@ -225,7 +222,7 @@ var cmds = {
     var i;
     path = path.split(/(?:\.|\[|\])+/);
     for (i = 0; i < path.length - 1; i++)
-        obj = obj[path[i]];
+      obj = obj[path[i]];
 
     obj[path[i]] = value;
   },
