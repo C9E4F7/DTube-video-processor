@@ -15,7 +15,7 @@ const genToken = uuidv4();
 
 http.createServer(function (req, res) {
 
-	res.setHeader('access-control-allow-headers', 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range')
+	res.setHeader('access-control-allow-headers', 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range');
 	res.setHeader('access-control-allow-origin', corsVar);
 	res.setHeader('access-control-allow-credentials', 'true');
 	res.setHeader('Content-Type','application/json; charset=utf-8');
@@ -24,12 +24,12 @@ http.createServer(function (req, res) {
 	if (req.url == '/getStatus') {
 		res.statusCode = 200;
 		res.end('{"version":"0.7.5","currentWaitingInQueue":{"audioCpuToEncode":0,"videoGpuToEncode":0,"audioVideoCpuToEncode":0,"spriteToCreate":0,"ipfsToAdd":0}}');
-	};
+	}
 
  // sending encoder progress to user
 	if (req.url.match(/\/getProgressByToken.*/)) {
 		res.end(JSON.stringify(cmds.encoderResponse));
-	};
+	}
 
   // file upload
 	if (req.url == '/uploadVideo?videoEncodingFormats=240p,480p,720p,1080p&sprite=true' && !reqhappened) {
@@ -46,7 +46,7 @@ http.createServer(function (req, res) {
 					var form = new formidable.IncomingForm();
 
 					//Sane Form options
-					form.maxFields = 1
+					form.maxFields = 1;
 					form.encoding = 'utf-8';
 					form.maxFileSize = '4096000000';
 
@@ -86,7 +86,7 @@ http.createServer(function (req, res) {
 										res.end(JSON.stringify(successResponse));
 
 										var videoHeight = fileData.streams[0].height;
-										var fileDuration = fileData.format.duration
+										var fileDuration = fileData.format.duration;
 
 										// upload source file to ipfs
 										cmds.ipfs_cmds.ipfsUpload(file.path, "ipfsAddSourceVideo");
@@ -127,8 +127,7 @@ http.createServer(function (req, res) {
 
 
 						form.on('error', function(err) {
-							console.error('Error', err)
-				      throw err;
+							console.error('Error', err);
 							process.exit();
 						});
 
