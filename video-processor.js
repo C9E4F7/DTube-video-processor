@@ -7,9 +7,6 @@ var cmds = require('./video-processor-cmds.js');
 // cross-origin resource sharing variable
 corsVar = process.env.CORSVAR || 'https://dtube.nannal.com';
 
-//Clean Up
-shell.rm('-f', ['./fileres240.mp4','./fileres480.mp4','./sprite/*','./upload/*']);
-
 // variable to assure only one upload request happens
 var reqhappened = false;
 
@@ -19,11 +16,10 @@ const genToken = uuidv4();
 http.createServer(function (req, res) {
 
 	res.setHeader('access-control-allow-headers', 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range')
-	res.setHeader('access-control-allow-origin', 'https://dtube.nannal.com');
+	res.setHeader('access-control-allow-origin', corsVar);
 	res.setHeader('access-control-allow-credentials', 'true');
 	res.setHeader('Content-Type','application/json; charset=utf-8');
-	// res.setHeader('access-control-max-age','600');
-	// res.setHeader('server','Kestrel');
+ 	res.setHeader('access-control-max-age','600');
 
 	if (req.url == '/getStatus') {
 		res.statusCode = 200;
@@ -75,6 +71,7 @@ http.createServer(function (req, res) {
 										if (code) {
 
 											// if error, success is false, no token, end process
+											console.log(stderr);
 											successResponse.success = "false";
 											res.end(JSON.stringify(successResponse));
 											process.exit();

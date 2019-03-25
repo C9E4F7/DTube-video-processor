@@ -31,6 +31,7 @@ var cmds = {
       ipfs.add(testBuffer, function (err, file) {
 
           if (err) {
+              console.log(err);
               process.exit();
             }
               // updating relevant encoder response fields
@@ -75,11 +76,13 @@ var cmds = {
 
                           // code isn't 0 if error occurs
                           if (code) {
+                           console.log(stderr);
                            process.exit();
                          } else {
                            shell.exec(montCmd, function(code, stdout, stderr){
                                     // code isn't 0 if error occurs
                                     if (code) {
+                                     console.log(stderr);
                                      process.exit();
                                    } else {
                                      //if no errors, update relevant encoder response fields and upload to ipfs
@@ -131,6 +134,7 @@ var cmds = {
 
        hbjs.spawn(settings)
          .on('error', err => {
+           console.log(err);
            cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.errorMessage = err;
            process.exit();
          })
