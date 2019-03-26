@@ -87,8 +87,8 @@ var cmds = {
             } else {
               //if no errors, update relevant encoder response fields and upload to ipfs
               cmds.encoderResponse.sprite.spriteCreation.progress = "100.00%";
-    					cmds.encoderResponse.sprite.spriteCreation.lastTimeProgress = Date();
-    					cmds.encoderResponse.sprite.spriteCreation.step = "Success";
+              cmds.encoderResponse.sprite.spriteCreation.lastTimeProgress = Date();
+              cmds.encoderResponse.sprite.spriteCreation.step = "Success";
               cmds.ipfs_cmds.ipfsUpload("./sprite/sprite.png", 'sprite.ipfsAddSprite');
               return stdout;
             }
