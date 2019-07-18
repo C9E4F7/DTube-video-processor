@@ -22,13 +22,13 @@ var cmds = {
 	ipfs_cmds: {
 
 		// uploads file to ipfs, second parameter is the property to update within encoder response
-		ipfsUpload: (filePath, prop) => {
+		ipfsUpload: (filePath, justHash, prop) => {
 			//Connceting to our http api
 			const ipfs = ipfsAPI(ipfsIp, ipfsPort, {protocol: ipfsProtocol})
 			let videoFile = fs.readFileSync(filePath);
 			let testBuffer = new Buffer.from(videoFile);
 
-			ipfs.add(testBuffer, function (err, file) {
+			ipfs.add(testBuffer, {"only-hash": justHash}, function (err, file) {
 
 				if (err) {
 					console.log(err);
@@ -56,11 +56,13 @@ var cmds = {
 		// splits video into images
 		createVideoSplitCmd: (filePath, vidLength, resDir) => {
 
-			if (vidLength > 600) {
-				var frameRate = 100/vidLength;
-			} else {
-				var frameRate = 1;
-			}
+			// if (vidLength > 600) {
+			// 	var frameRate = 100/vidLength;
+			// } else {
+			// 	var frameRate = 1;
+			// }
+
+			let frameRate = 100/vidLength;
 
 			return `ffmpeg -y -i `+filePath+ ` -r `+frameRate+` -vf scale=128:72 -f image2 `+resDir+`/img%03d`
 		},
@@ -89,7 +91,7 @@ var cmds = {
 							cmds.encoderResponse.sprite.spriteCreation.progress = "100.00%";
 							cmds.encoderResponse.sprite.spriteCreation.lastTimeProgress = Date();
 							cmds.encoderResponse.sprite.spriteCreation.step = "Success";
-							cmds.ipfs_cmds.ipfsUpload("./sprite/sprite.png", 'sprite.ipfsAddSprite');
+							cmds.ipfs_cmds.ipfsUpload("./sprite/sprite.png", true, 'sprite.ipfsAddSprite');
 							return stdout;
 						}
 					});
@@ -142,7 +144,7 @@ var cmds = {
 				})
 				.on('complete', () => {
 					// when complete, upload to ipfs
-					cmds.ipfs_cmds.ipfsUpload(outputName, propIpfs);
+					cmds.ipfs_cmds.ipfsUpload(outputName, true, propIpfs);
 					cb();
 				});
 		}
@@ -227,11 +229,45 @@ var cmds = {
 		obj[path[i]] = value;
 	},
 
-	// checking encoder response values to ensure everything is done before setting finished to true
-	checkIfFinished: (numOfEncodedVids) => {
+	moveFiles: (filePath, numOfEncodedVids) => {
 
+		var oldEncodedVidPaths = ["fileres240.mp4", "fileres480.mp4"];
+
+		var is = fs.createReadStream(filePath);
+		var os = fs.createWriteStream("./longtermstore/" + cmds.encoderResponse.ipfsAddSourceVideo.hash);
+
+		is.pipe(os);
+		is.on('end',function() {
+		    fs.unlinkSync(filePath);
+		});
+
+		for(let i=0; i<numOfEncodedVids; i++){
+			is = fs.createReadStream(oldEncodedVidPaths[i]);
+			os = fs.createWriteStream("./longtermstore/" + cmds.encoderResponse.encodedVideos[i].ipfsAddEncodeVideo.hash);
+
+			is.pipe(os);
+			is.on('end',function() {
+			    fs.unlinkSync(oldEncodedVidPaths[i]);
+			});
+		}
+
+		is = fs.createReadStream("./sprite/sprite.png");
+		os = fs.createWriteStream("./longtermstore/" + cmds.encoderResponse.sprite.ipfsAddSprite.hash);
+
+		is.pipe(os);
+		is.on('end',function() {
+		    fs.unlinkSync("./sprite/sprite.png");
+		});
+
+	},
+
+	// checking encoder response values to ensure everything is done before setting finished to true
+	checkIfFinished: (filePath) => {
+		var numOfEncodedVids = cmds.encoderResponse.encodedVideos.length
+		console.log(numOfEncodedVids);
 		var func = setInterval(()=>{
 
+			// creating an array of encoded video hashes to iterate through in the "if"
 			var encodedVidsHash = [];
 			for (let i = 0; i < numOfEncodedVids; i++)
 			{
@@ -241,13 +277,14 @@ var cmds = {
 			if (cmds.encoderResponse.ipfsAddSourceVideo.hash && cmds.encoderResponse.sprite.ipfsAddSprite.hash && encodedVidsHash.every((hash) => {return hash})){
 				clearInterval(func);
 
+				cmds.moveFiles(filePath, numOfEncodedVids)
 				// wait before setting finished to true and ending process
 				setTimeout(()=>{
 					cmds.encoderResponse.finished = true;
-				}, 5000);
+				}, 1000);
 				setTimeout(()=>{
 					process.exit();
-				},20000);
+				},10000);
 			}
 
 		},2000);

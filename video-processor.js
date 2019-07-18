@@ -42,7 +42,7 @@ http.createServer(function (req, res) {
 
 			res.statusCode = 200;
 
-			reqhappened = true;
+
 			var form = new formidable.IncomingForm();
 
 			//Sane Form options
@@ -60,7 +60,7 @@ http.createServer(function (req, res) {
 
 
 			form.on('file', function (name, file){
-
+				reqhappened = true;
 				//frontend needs to know if upload was successful and receive the token
 				var successResponse = { success: "", token: ""};
 
@@ -87,7 +87,7 @@ http.createServer(function (req, res) {
 					var fileDuration = fileData.format.duration;
 
 					// upload source file to ipfs
-					cmds.ipfs_cmds.ipfsUpload(file.path, "ipfsAddSourceVideo");
+					cmds.ipfs_cmds.ipfsUpload(file.path, true, "ipfsAddSourceVideo");
 
 					//create sprite and upload it to ipfs (ipfs upload function is called within sprite function)
 					cmds.sprite_cmds.sprite(file.path, fileDuration, "./sprite");
@@ -96,7 +96,7 @@ http.createServer(function (req, res) {
 					if (videoHeight <= 240 || fileDuration > 600){
 
 						// checks if all procedures are done so that finish status can be set
-						cmds.checkIfFinished(0);
+						cmds.checkIfFinished(file.path);
 
 					// videos between 240 and 480 res get encoded to 240 res
 					} else if( videoHeight > 240 && videoHeight <= 480){
@@ -105,7 +105,7 @@ http.createServer(function (req, res) {
 						cmds.addEncodedVideoData(["240p"]);
 
 						cmds.encoder_cmds.encode(cmds.encoder_cmds.changeSettings(file.path, "fileres240.mp4" , 426, 240), 0);
-						cmds.checkIfFinished(1);
+						cmds.checkIfFinished(file.path);
 
 					// videos over 480 res get encoded to 240 and 480 res
 					} else if( videoHeight > 480) {
@@ -116,7 +116,7 @@ http.createServer(function (req, res) {
 							cmds.encoder_cmds.encode(cmds.encoder_cmds.changeSettings(file.path, "fileres480.mp4" , 854, 480), 1);
 						});
 
-						cmds.checkIfFinished(2);
+						cmds.checkIfFinished(file.path);
 					}
 
 				 });

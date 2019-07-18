@@ -1,7 +1,7 @@
 {
   "name": "dtube-video-processor",
   "version": "1.0.0",
-  "description": "receives, encodes, uploads videos to ipfs for dtube",
+  "description": "receives, encodes and uploads videos to ipfs for dtube",
   "main": "video-processor.js",
   "scripts": {
     "test": "echo \"Error: no test specified\"",
@@ -17,7 +17,7 @@
   "dependencies": {
     "formidable": "^1.2.1",
     "handbrake-js": "^3.0.8",
-    "ipfs-http-client": "^29.1.0",
+    "ipfs-http-client": "^29.1.1",
     "shelljs": "^0.8.3",
     "uuid": "^3.3.2"
   }
