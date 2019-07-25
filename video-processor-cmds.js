@@ -25,10 +25,10 @@ var cmds = {
 		ipfsUpload: (filePath, justHash, prop) => {
 			//Connceting to our http api
 			const ipfs = ipfsAPI(ipfsIp, ipfsPort, {protocol: ipfsProtocol})
-			let videoFile = fs.readFileSync(filePath);
-			let testBuffer = new Buffer.from(videoFile);
+			//let videoFile = fs.readFileSync(filePath);
+			//let testBuffer = new Buffer.from(videoFile);
 
-			ipfs.add(testBuffer, {"only-hash": justHash}, function (err, file) {
+			ipfs.add(videoFile, {"only-hash": justHash}, function (err, file) {
 
 				if (err) {
 					console.log(err);
@@ -74,7 +74,13 @@ var cmds = {
 
 		createSprite: (splitCmd, montCmd) => {
 
-			shell.exec(splitCmd, function(code, stdout, stderr) {
+      var timeoutfunc = setTimeout(()=>{
+          console.log("Sprite makin timed out")
+          console.log("Killing container")
+          process.exit();
+        }, 600000);
+
+			shell.exec(splitCmd,function(code, stdout, stderr) {
 
 				// code isn't 0 if error occurs
 				if (code) {
@@ -87,6 +93,8 @@ var cmds = {
 							console.log(stderr);
 							process.exit();
 						} else {
+              clearTimeout(timeoutfunc)
+              console.log("sprite completed")
 							//if no errors, update relevant encoder response fields and upload to ipfs
 							cmds.encoderResponse.sprite.spriteCreation.progress = "100.00%";
 							cmds.encoderResponse.sprite.spriteCreation.lastTimeProgress = Date();
@@ -126,6 +134,12 @@ var cmds = {
 		},
 
 		encode: (settings, encodedVideoIndex, cb) => {
+
+      var timeoutfunc = setTimeout(()=>{
+          console.log("Encoder timed out")
+          console.log("Killing container")
+          process.exit();
+        },1800000);
 			var noop = function(){};
 			cb = cb || noop;
 
@@ -134,15 +148,19 @@ var cmds = {
 
 			hbjs.spawn(settings)
 				.on('error', err => {
-					console.log(err);
+					// console.log(err);
 					cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.errorMessage = err;
+          console.log("Exiting process, encoding error");
 					process.exit();
 				})
 				.on('progress', progress => {
+          console.log("Encoding progress, video index: "+ encodedVideoIndex)
 					cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.progress = String(progress.percentComplete)+"%";
 					cmds.encoderResponse.encodedVideos[encodedVideoIndex].encode.lastTimeProgress = Date();
 				})
 				.on('complete', () => {
+          console.log("Encoding completed, video index: " + encodedVideoIndex)
+          clearTimeout(timeoutfunc)
 					// when complete, upload to ipfs
 					cmds.ipfs_cmds.ipfsUpload(outputName, true, propIpfs);
 					cb();
@@ -264,7 +282,7 @@ var cmds = {
 	// checking encoder response values to ensure everything is done before setting finished to true
 	checkIfFinished: (filePath) => {
 		var numOfEncodedVids = cmds.encoderResponse.encodedVideos.length
-		console.log(numOfEncodedVids);
+		console.log("We should have encoded: "+numOfEncodedVids+" videos");
 		var func = setInterval(()=>{
 
 			// creating an array of encoded video hashes to iterate through in the "if"
@@ -276,13 +294,16 @@ var cmds = {
 
 			if (cmds.encoderResponse.ipfsAddSourceVideo.hash && cmds.encoderResponse.sprite.ipfsAddSprite.hash && encodedVidsHash.every((hash) => {return hash})){
 				clearInterval(func);
-
+        console.log("Moving files to long term storage")
+        console.log(cmds.encoderResponse)
 				cmds.moveFiles(filePath, numOfEncodedVids)
 				// wait before setting finished to true and ending process
 				setTimeout(()=>{
 					cmds.encoderResponse.finished = true;
+          console.log("Encoder finished")
 				}, 1000);
 				setTimeout(()=>{
+          console.log("Killing container")
 					process.exit();
 				},10000);
 			}
